@@ -1,0 +1,42 @@
+## 1.SQL data cleaning
+select *  from kagglecommerce k where where k.unitprice  > 0 and k.quantity >0
+
+## 2.SQL revenue analysis and pricing
+WITH avg_price AS (
+  SELECT 
+    distinct k.description ,case when avg(k.unitprice)<10 then 'Very Low'
+	when avg(k.unitprice)>10 and avg(k.unitprice) <20 then 'Low'
+	when avg(k.unitprice)>20 and avg(k.unitprice) <50 then 'Middle'
+	else 'High'	end as kategoriPrice, avg(k.unitprice) as avg_price
+  from kagglecommerce k where k.unitprice >0
+  group by k.description 
+),
+detail as (
+  select k.description,k.quantity, (k.unitprice * k.quantity) as revenue, a.kategoriprice, a.avg_price
+  from kagglecommerce k
+  join avg_price a on k.description =a.description
+  where k.unitprice  > 0 and k.quantity >0 and k.customerid is not null and extract(year from k.invoicedate)=2011
+)
+select distinct description,sum(quantity) as quantity,sum(revenue) as revenue,kategoriPrice,avg_price
+from detail
+group by kategoriPrice,description,avg_price
+
+
+## 3.SQL trend revenue
+select  distinct extract(month from k.invoicedate) , 
+ case extract(month from k.invoicedate)
+   when 1 then 'Jan'
+   when 2 then 'Feb'
+   when 3 then 'Mar'
+   when 4 then 'Apr'
+   when 5 then 'Mei'
+   when 6 then 'Jun'
+   when 7 then 'Jul'
+   when 8 then 'Aug'
+   when 9 then 'Sep'
+   when 10 then 'Oct'
+   when 11 then 'Nov'
+   else 'Dec' end as namabulan,
+ sum(k.quantity)  as qty, sum(k.quantity * k.unitprice) as revenue, sum(k.quantity * k.unitprice)/sum(k.quantity) as avgprice
+from kagglecommerce k where k.unitprice  > 0 and k.quantity >0 and extract(year from k.invoicedate)=2011
+group by extract(month from k.invoicedate)
